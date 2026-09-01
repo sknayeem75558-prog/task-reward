@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TaskEarn</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="wrap nav"><b>💰 TaskEarn</b><a href="admin.html">Admin</a></div></header>
+<main class="wrap">
+  <section id="auth" class="card">
+    <h1>TaskEarn</h1>
+    <p>Free tasks complete করে points সংগ্রহ করুন।</p>
+    <div class="grid2">
+      <div>
+        <h2>Register</h2>
+        <input id="regEmail" type="email" placeholder="Email">
+        <input id="regPass" type="password" placeholder="Password (min 6)">
+        <button onclick="register()">Create account</button>
+      </div>
+      <div>
+        <h2>Login</h2>
+        <input id="loginEmail" type="email" placeholder="Email">
+        <input id="loginPass" type="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+      </div>
+    </div>
+    <p id="authMsg" class="msg"></p>
+  </section>
+
+  <section id="app" hidden>
+    <div class="grid3">
+      <div class="card"><small>Balance</small><h2 id="points">0</h2><small>Points</small></div>
+      <div class="card"><small>Account</small><h3 id="userEmail"></h3></div>
+      <div class="card"><button class="danger" onclick="logout()">Logout</button></div>
+    </div>
+
+    <section class="card">
+      <h2>Available Tasks</h2>
+      <div id="tasks"></div>
+    </section>
+
+    <section class="card">
+      <h2>Submit Task Proof</h2>
+      <p class="muted">Task ID এবং আপনার proof/link দিন। Admin approve করলে points যোগ হবে।</p>
+      <input id="taskId" placeholder="Task ID">
+      <textarea id="proof" placeholder="Proof / link"></textarea>
+      <button onclick="submitProof()">Submit</button>
+      <p id="submitMsg" class="msg"></p>
+    </section>
+
+    <section class="card">
+      <h2>My Submissions</h2>
+      <div id="subs"></div>
+    </section>
+
+    <section class="card">
+      <h2>Reward Request</h2>
+      <input id="withdrawPoints" type="number" min="1" placeholder="Points">
+      <input id="method" placeholder="Reward method (admin-approved)">
+      <input id="account" placeholder="Account/contact for payout">
+      <button onclick="requestReward()">Request reward</button>
+      <p id="rewardMsg" class="msg"></p>
+    </section>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
