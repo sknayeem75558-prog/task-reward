@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TaskEarn Admin</title><link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script defer src="admin.js"></script>
+</head><body><header><h1>TaskEarn Admin</h1><a href="index.html">User Site</a></header><main>
+<section id="adminLoginSection" class="card"><h2>Admin Login</h2><input id="adminEmail" type="email" placeholder="Email"><input id="adminPassword" type="password" placeholder="Password"><button onclick="adminLogin()">Login</button><div id="adminMessage" class="message"></div></section>
+<section id="adminSection" style="display:none"><div class="card"><h2>Create Task</h2><input id="taskTitle" placeholder="Task title"><textarea id="taskDescription" placeholder="Task description"></textarea><input id="taskReward" type="number" placeholder="Reward points"><button onclick="createTask()">Create Task</button></div>
+<div class="card"><h2>Pending Submissions</h2><div id="pending"></div></div><div class="card"><h2>Reward Requests</h2><div id="requests"></div></div></section>
+</main></body></html>
