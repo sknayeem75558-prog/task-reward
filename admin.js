@@ -8,8 +8,8 @@ async function adminLogin() {
   }
 
   const { data, error } = await sb.auth.signInWithPassword({
-    email,
-    password
+    email: email,
+    password: password
   });
 
   if (error) {
@@ -47,15 +47,24 @@ async function adminLogin() {
   await loadPending();
   await loadRequests();
 }
-if (!title || !reward_points) {
+
+
+async function createTask() {
+  const title = document.getElementById("taskTitle").value.trim();
+  const description = document.getElementById("taskDescription").value.trim();
+  const reward_points = Number(
+    document.getElementById("taskReward").value
+  );
+
+  if (!title || !reward_points) {
     alert("Task title এবং reward points দিন।");
     return;
   }
 
   const { error } = await sb.from("tasks").insert({
-    title,
-    description,
-    reward_points,
+    title: title,
+    description: description,
+    reward_points: reward_points,
     active: true
   });
 
@@ -71,6 +80,7 @@ if (!title || !reward_points) {
   document.getElementById("taskReward").value = "";
 }
 
+
 async function loadPending() {
   const box = document.getElementById("pending");
 
@@ -81,7 +91,7 @@ async function loadPending() {
     .order("created_at", { ascending: true });
 
   if (error) {
-    box.innerHTML = "<p>" + error.message + "</p>";
+    box.innerHTML = "<p>" + escapeHtml(error.message) + "</p>";
     return;
   }
 
@@ -94,16 +104,19 @@ async function loadPending() {
     <div class="task-card">
       <b>${escapeHtml(x.tasks?.title || "Task")}</b>
       <p>User: ${escapeHtml(x.profiles?.email || "")}</p>
-      <p>Proof: ${escapeHtml(x.proof)}</p>
+      <p>Proof: ${escapeHtml(x.proof || "")}</p>
+
       <button onclick="review('${x.id}','approve')">
         Approve
       </button>
+
       <button onclick="review('${x.id}','reject')">
         Reject
       </button>
     </div>
   `).join("");
 }
+
 
 async function review(id, action) {
   const { error } = await sb.rpc("review_submission", {
@@ -112,12 +125,15 @@ async function review(id, action) {
   });
 
   if (error) {
-    alert(error.message);
+    alert("Review Error: " + error.message);
     return;
   }
 
+  alert("Submission " + action + " হয়েছে ✅");
+
   await loadPending();
 }
+
 
 async function loadRequests() {
   const box = document.getElementById("requests");
@@ -129,7 +145,7 @@ async function loadRequests() {
     .order("created_at", { ascending: true });
 
   if (error) {
-    box.innerHTML = "<p>" + error.message + "</p>";
+    box.innerHTML = "<p>" + escapeHtml(error.message) + "</p>";
     return;
   }
 
@@ -142,11 +158,13 @@ async function loadRequests() {
     <div class="request-card">
       <b>${x.points} Points</b>
       <p>User: ${escapeHtml(x.profiles?.email || "")}</p>
-      <p>Method: ${escapeHtml(x.method)}</p>
-      <p>Account: ${escapeHtml(x.account)}</p>
+      <p>Method: ${escapeHtml(x.method || "")}</p>
+      <p>Account: ${escapeHtml(x.account || "")}</p>
+
       <button onclick="rewardReview('${x.id}','paid')">
         Mark Paid
       </button>
+
       <button onclick="rewardReview('${x.id}','rejected')">
         Reject
       </button>
@@ -154,19 +172,23 @@ async function loadRequests() {
   `).join("");
 }
 
+
 async function rewardReview(id, status) {
   const { error } = await sb
     .from("reward_requests")
-    .update({ status })
+    .update({ status: status })
     .eq("id", id);
 
   if (error) {
-    alert(error.message);
+    alert("Reward Error: " + error.message);
     return;
   }
 
+  alert("Reward request " + status + " হয়েছে ✅");
+
   await loadRequests();
 }
+
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -175,4 +197,4 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-      }
+}
