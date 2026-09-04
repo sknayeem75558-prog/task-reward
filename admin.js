@@ -8,8 +8,8 @@ async function adminLogin() {
   }
 
   const { data, error } = await sb.auth.signInWithPassword({
-    email: email,
-    password: password
+    email,
+    password
   });
 
   if (error) {
@@ -17,18 +17,25 @@ async function adminLogin() {
     return;
   }
 
-  const { data: profile, error: profileError } = await sb
+  const userId = data.user.id;
+
+  const { data: profiles, error: profileError } = await sb
     .from("profiles")
-    .select("is_admin")
-    .eq("id", data.user.id)
-    .single();
+    .select("id,is_admin")
+    .eq("id", userId)
+    .limit(1);
 
   if (profileError) {
     alert("Profile Error: " + profileError.message);
     return;
   }
 
-  if (profile.is_admin !== true) {
+  if (!profiles || profiles.length === 0) {
+    alert("এই account-এর profile পাওয়া যায়নি।");
+    return;
+  }
+
+  if (profiles[0].is_admin !== true) {
     await sb.auth.signOut();
     alert("এই account Admin নয়।");
     return;
@@ -40,15 +47,7 @@ async function adminLogin() {
   await loadPending();
   await loadRequests();
 }
-
-async function createTask() {
-  const title = document.getElementById("taskTitle").value.trim();
-  const description = document.getElementById("taskDescription").value.trim();
-  const reward_points = Number(
-    document.getElementById("taskReward").value
-  );
-
-  if (!title || !reward_points) {
+if (!title || !reward_points) {
     alert("Task title এবং reward points দিন।");
     return;
   }
