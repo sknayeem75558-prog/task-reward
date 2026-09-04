@@ -17,25 +17,20 @@ async function adminLogin() {
     return;
   }
 
-  const userId = data.user.id;
+  const user = data.user;
 
-  const { data: profiles, error: profileError } = await sb
+  const { data: profile, error: profileError } = await sb
     .from("profiles")
-    .select("id,is_admin")
-    .eq("id", userId)
-    .limit(1);
+    .select("id, email, is_admin")
+    .eq("id", user.id)
+    .single();
 
   if (profileError) {
     alert("Profile Error: " + profileError.message);
     return;
   }
 
-  if (!profiles || profiles.length === 0) {
-    alert("এই account-এর profile পাওয়া যায়নি।");
-    return;
-  }
-
-  if (profiles[0].is_admin !== true) {
+  if (profile.is_admin !== true) {
     await sb.auth.signOut();
     alert("এই account Admin নয়।");
     return;
@@ -61,12 +56,14 @@ async function createTask() {
     return;
   }
 
-  const { error } = await sb.from("tasks").insert({
-    title: title,
-    description: description,
-    reward_points: reward_points,
-    active: true
-  });
+  const { error } = await sb
+    .from("tasks")
+    .insert({
+      title: title,
+      description: description,
+      reward_points: reward_points,
+      active: true
+    });
 
   if (error) {
     alert("Task Error: " + error.message);
@@ -86,7 +83,14 @@ async function loadPending() {
 
   const { data, error } = await sb
     .from("submissions")
-    .select("id,proof,status,profiles(email),tasks(title,reward_points)")
+    .select(`
+      id,
+      proof,
+      status,
+      created_at,
+      profiles(email),
+      tasks(title, reward_points)
+    `)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -100,17 +104,30 @@ async function loadPending() {
     return;
   }
 
-  box.innerHTML = data.map(x => `
+  box.innerHTML = data.map(item => `
     <div class="task-card">
-      <b>${escapeHtml(x.tasks?.title || "Task")}</b>
-      <p>User: ${escapeHtml(x.profiles?.email || "")}</p>
-      <p>Proof: ${escapeHtml(x.proof || "")}</p>
+      <h3>${escapeHtml(item.tasks?.title || "Task")}</h3>
 
-      <button onclick="review('${x.id}','approve')">
+      <p>
+        User:
+        ${escapeHtml(item.profiles?.email || "")}
+      </p>
+
+      <p>
+        Reward:
+        ${item.tasks?.reward_points || 0} Points
+      </p>
+
+      <p>
+        Proof:
+        ${escapeHtml(item.proof || "")}
+      </p>
+
+      <button onclick="review('${item.id}', 'approve')">
         Approve
       </button>
 
-      <button onclick="review('${x.id}','reject')">
+      <button onclick="review('${item.id}', 'reject')">
         Reject
       </button>
     </div>
@@ -119,10 +136,13 @@ async function loadPending() {
 
 
 async function review(id, action) {
-  const { error } = await sb.rpc("review_submission", {
-    p_submission_id: id,
-    p_action: action
-  });
+  const { error } = await sb.rpc(
+    "review_submission",
+    {
+      p_submission_id: id,
+      p_action: action
+    }
+  );
 
   if (error) {
     alert("Review Error: " + error.message);
@@ -140,7 +160,15 @@ async function loadRequests() {
 
   const { data, error } = await sb
     .from("reward_requests")
-    .select("id,points,method,account,status,profiles(email)")
+    .select(`
+      id,
+      points,
+      method,
+      account,
+      status,
+      created_at,
+      profiles(email)
+    `)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -154,20 +182,34 @@ async function loadRequests() {
     return;
   }
 
-  box.innerHTML = data.map(x => `
+  box.innerHTML = data.map(item => `
     <div class="request-card">
-      <b>${x.points} Points</b>
-      <p>User: ${escapeHtml(x.profiles?.email || "")}</p>
-      <p>Method: ${escapeHtml(x.method || "")}</p>
-      <p>Account: ${escapeHtml(x.account || "")}</p>
 
-      <button onclick="rewardReview('${x.id}','paid')">
+      <h3>${item.points} Points</h3>
+
+      <p>
+        User:
+        ${escapeHtml(item.profiles?.email || "")}
+      </p>
+
+      <p>
+        Method:
+        ${escapeHtml(item.method || "")}
+      </p>
+
+      <p>
+        Account:
+        ${escapeHtml(item.account || "")}
+      </p>
+
+      <button onclick="rewardReview('${item.id}', 'paid')">
         Mark Paid
       </button>
 
-      <button onclick="rewardReview('${x.id}','rejected')">
+      <button onclick="rewardReview('${item.id}', 'rejected')">
         Reject
       </button>
+
     </div>
   `).join("");
 }
@@ -176,7 +218,9 @@ async function loadRequests() {
 async function rewardReview(id, status) {
   const { error } = await sb
     .from("reward_requests")
-    .update({ status: status })
+    .update({
+      status: status
+    })
     .eq("id", id);
 
   if (error) {
